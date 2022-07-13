@@ -7,9 +7,15 @@ def nothing(x):
     pass
 
 
-# change the IP address below according to the
+def flash(x):
+    urllib.request.urlopen(x)
+
+
+# change the IP address below accordinqg to the
 # IP shown in the Serial monitor of Arduino code
-url = 'http://10.0.0.17/cam-lo.jpg'
+url = 'http://10.0.0.17/cam-mid.jpg'
+on = 'http://10.0.0.17/ledOn'
+off = 'http://10.0.0.17/ledOff'
 
 cv2.namedWindow("live transmission", cv2.WINDOW_AUTOSIZE)
 
@@ -21,7 +27,12 @@ cv2.createTrackbar("UH", "Tracking", 255, 255, nothing)
 cv2.createTrackbar("US", "Tracking", 255, 255, nothing)
 cv2.createTrackbar("UV", "Tracking", 255, 255, nothing)
 
+
+
+
 while True:
+
+    flash(on)
     img_resp = urllib.request.urlopen(url)
     imgnp = np.array(bytearray(img_resp.read()), dtype=np.uint8)
     frame = cv2.imdecode(imgnp, -1)
@@ -49,4 +60,5 @@ while True:
     if key == ord('q'):
         break
 
+flash(off)
 cv2.destroyAllWindows()
