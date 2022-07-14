@@ -27,12 +27,11 @@ cv2.createTrackbar("UH", "Tracking", 255, 255, nothing)
 cv2.createTrackbar("US", "Tracking", 255, 255, nothing)
 cv2.createTrackbar("UV", "Tracking", 255, 255, nothing)
 
-
-
-
+i = 0
 while True:
-
-    flash(on)
+    if(i <= 125):
+        flash(on)
+    i = i + 1
     img_resp = urllib.request.urlopen(url)
     imgnp = np.array(bytearray(img_resp.read()), dtype=np.uint8)
     frame = cv2.imdecode(imgnp, -1)
@@ -57,8 +56,16 @@ while True:
     cv2.imshow("mask", mask)
     cv2.imshow("res", res)
     key = cv2.waitKey(5)
+
+    if(i <= 256):
+        pass
+
+    if(i >= 256):
+        flash(off)
+
     if key == ord('q'):
         break
+
 
 flash(off)
 cv2.destroyAllWindows()

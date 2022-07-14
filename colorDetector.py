@@ -14,9 +14,9 @@ url = 'http://10.0.0.17/cam-hi.jpg'
 on = 'http://10.0.0.17/ledOn'
 off = 'http://10.0.0.17/ledOff'
 cv2.namedWindow("live transmission", cv2.WINDOW_AUTOSIZE)
-loRes = (320, 240)
-midRes = (350, 530)
-hiRes = (800, 600)
+loRes = (240, 320)
+midRes = (530, 350)
+hiRes = (600, 800)
 l_h, l_s, l_v = 10, 5, 75
 u_h, u_s, u_v = 50, 135, 240
 
@@ -29,21 +29,20 @@ def statMask(size):
         rectMask = cv2.rectangle(rectMask, (25, 55), (225, 300), 0, -1)//255
         rectMask = cv2.threshold(rectMask, 127, 255, cv2.THRESH_BINARY)
 
-    if size == midRes:
-        rectMask = np.full(midRes, 255,  dtype=np.uint8)
-        rectMask = cv2.rectangle(rectMask, (15, 260), (330, 330), 0, -1)
-        rectMask = cv2.rectangle(rectMask, (35, 60), (310, 250), 0, -1)//255
-
-    if size == hiRes:
-        rectMask = np.full(hiRes, 255, dtype=np.uint8)
+    if size == midRes or size == hiRes:
+        rectMask = np.full(hiRes, 255,  dtype=np.uint8)
         rectMask = cv2.rectangle(rectMask, (30, 580), (565, 760), 0, -1)
         rectMask = cv2.rectangle(rectMask, (80, 135), (535, 570), 0, -1)//255
+        #rectMask = cv2.rectangle(rectMask, (15, 260), (330, 330), 0, -1)
+        #rectMask = cv2.rectangle(rectMask, (35, 60), (310, 250), 0, -1)//255
+        print(rectMask.shape[:2])
+
+#    if size == hiRes:
+#        rectMask = np.full(hiRes, 255, dtype=np.uint8)
+#        rectMask = cv2.rectangle(rectMask, (30, 580), (565, 760), 0, -1)
+#        rectMask = cv2.rectangle(rectMask, (80, 135), (535, 570), 0, -1)//255
 
     return rectMask
-
-
-statMask(midRes)
-
 
 while True:
     flash(on)
@@ -73,7 +72,8 @@ while True:
             cv2.putText(frame, "blue", (cx - 20, cy - 20), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
 
     res = cv2.bitwise_and(frame, frame, mask=mask)
-
+    res2 = cv2.bitwise_and(frame, frame, mask=mask2)
+    cv2.imshow('mask2', res2)
     cv2.imshow("live transmission", frame)
     cv2.imshow("mask", mask)
     cv2.imshow("res", res)
