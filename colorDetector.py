@@ -11,10 +11,10 @@ def flash(x):
     urllib.request.urlopen(x)
 
 url = 'http://10.0.0.17/cam-hi.jpg'
-##'''cam.bmp / cam-lo.jpg /cam-hi.jpg / cam.mjpeg '''
 on = 'http://10.0.0.17/ledOn'
 off = 'http://10.0.0.17/ledOff'
 cv2.namedWindow("live transmission", cv2.WINDOW_AUTOSIZE)
+
 white = (255, 255, 255)
 black = (0, 0, 0)
 small = (240, 320, 3)
@@ -27,7 +27,7 @@ def halfMask(size, half):
     if size == small:
         rectMask = np.full(size, black,  dtype=np.uint8)
         rectMask = cv2.rectangle(rectMask, (58, 28), (225, 211), 0, -1)
-        rectMask = cv2.rectangle(rectMask, (237, 14), (303, 226), 0, -1)
+#        rectMask = cv2.rectangle(rectMask, (237, 14), (303, 226), 0, -1)
 
     if size == large:
         background = np.full(size, black,  dtype=np.uint8)
@@ -41,23 +41,38 @@ def halfMask(size, half):
     return textMask
 
 
+lBlue = np.array([5,80,10])
+uBlue = np.array([30,255,255])
+
+flash(on)
+time.sleep(0.5)
+avgImg = np.full(large[:2], black[:1], dtype=np.uint8)
+frames = 0
 while True:
-    flash(on)
     img_resp = urllib.request.urlopen(url)
     imgnp = np.array(bytearray(img_resp.read()), dtype=np.uint8)
     frame = cv2.imdecode(imgnp, -1)
-    hsvFrame = cv2.cvtColor(frame, cv2.COLOR_BRG2HSV)
+
+    hsvFrame = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+    blurRGB = cv2.GaussianBlur(frame, (9,9), 0)
 
     maskTop = halfMask(large, 'top')
     maskBottom = halfMask(large, 'bottom')
 
     resTop = cv2.bitwise_and(frame, maskTop)
     resBot = cv2.bitwise_and(frame, maskBottom)
-
+    maskBlue = cv2.inRange(hsvFrame, lBlue, uBlue)
+    resBlue = cv2.bitwise_and(hsvFrame, hsvFrame, mask = maskBlue)
+    tight = cv2.Canny(avgImg, 35, 190)
+    frames += 1
+    avg = np.add(avgImg, tight)
+    avgEdge = np.divide(avg.astype(np.float32), frames)
+    cv2.imshow('blur', blurRGB)
+    cv2.imshow('edge', tight)
+    #cv2.imshow('hsv', resBlue)
     cv2.imshow("live transmission", frame)
-    cv2.imshow('maskedTop', resTop)
-    cv2.imshow('maskedBottom', resBot)
-
+    #cv2.imshow('maskedTop', resTop)
+    #cv2.imshow('maskedBottom', resBot)
     key = cv2.waitKey(5)
     if key == ord('q'):
         break
