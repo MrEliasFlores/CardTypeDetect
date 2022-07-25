@@ -41,38 +41,34 @@ def halfMask(size, half):
     return textMask
 
 
-lBlue = np.array([5,80,10])
-uBlue = np.array([30,255,255])
-
 flash(on)
 time.sleep(0.5)
-avgImg = np.full(large[:2], black[:1], dtype=np.uint8)
-frames = 0
+
 while True:
     img_resp = urllib.request.urlopen(url)
     imgnp = np.array(bytearray(img_resp.read()), dtype=np.uint8)
     frame = cv2.imdecode(imgnp, -1)
 
-    hsvFrame = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-    blurRGB = cv2.GaussianBlur(frame, (9,9), 0)
+    #hsvFrame = cv2.cvtColor(blurBGR, cv2.COLOR_RGB2HSV)
+    grayFrame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    blurBGR = cv2.GaussianBlur(grayFrame, (9, 9), cv2.BORDER_DEFAULT)
 
-    maskTop = halfMask(large, 'top')
-    maskBottom = halfMask(large, 'bottom')
+    edges = cv2.Canny(blurBGR, 10, 35)
+    edges = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, (10, 10))
 
-    resTop = cv2.bitwise_and(frame, maskTop)
-    resBot = cv2.bitwise_and(frame, maskBottom)
-    maskBlue = cv2.inRange(hsvFrame, lBlue, uBlue)
-    resBlue = cv2.bitwise_and(hsvFrame, hsvFrame, mask = maskBlue)
-    tight = cv2.Canny(avgImg, 35, 190)
-    frames += 1
-    avg = np.add(avgImg, tight)
-    avgEdge = np.divide(avg.astype(np.float32), frames)
-    cv2.imshow('blur', blurRGB)
+    contours, heirarchy = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    mask = np.zeros(frame.shape, dtype=np.uint8)
+    mask = cv2.drawContours(mask, (max(contours, key=len)), -1, (0,255,0), cv2.FILLED)
+    cv2.imshow('q', blurBGR)
+    mask = cv2.bitwise_not(mask)
+    img2gray = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
+    ret, mask = cv2.threshold(img2gray, 10, 255, cv2.THRESH_BINARY)
+    result = cv2.bitwise_and(frame, frame, mask=mask)
+
+    cv2.imshow('mask', result)
     cv2.imshow('edge', tight)
-    #cv2.imshow('hsv', resBlue)
     cv2.imshow("live transmission", frame)
-    #cv2.imshow('maskedTop', resTop)
-    #cv2.imshow('maskedBottom', resBot)
     key = cv2.waitKey(5)
     if key == ord('q'):
         break
