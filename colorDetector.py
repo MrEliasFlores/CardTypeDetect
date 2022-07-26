@@ -49,26 +49,27 @@ while True:
     imgnp = np.array(bytearray(img_resp.read()), dtype=np.uint8)
     frame = cv2.imdecode(imgnp, -1)
 
-    #hsvFrame = cv2.cvtColor(blurBGR, cv2.COLOR_RGB2HSV)
+    hsvFrame = cv2.cvtColor(frame, cv2.COLOR_RGB2HSV)
     grayFrame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     blurBGR = cv2.GaussianBlur(grayFrame, (9, 9), cv2.BORDER_DEFAULT)
 
-    edges = cv2.Canny(blurBGR, 10, 35)
-    edges = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, (10, 10))
+    thresh = cv2.adaptiveThreshold(blurBGR, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 25, 1)
 
-    contours, heirarchy = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    edges = cv2.Canny(thresh, 40, 50)
+    edges = cv2.dilate(edges, (7, 7), iterations=1)
+
+    contours, heirarchy = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
     mask = np.zeros(frame.shape, dtype=np.uint8)
-    mask = cv2.drawContours(mask, (max(contours, key=len)), -1, (0,255,0), cv2.FILLED)
-    cv2.imshow('q', blurBGR)
-    mask = cv2.bitwise_not(mask)
-    img2gray = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
-    ret, mask = cv2.threshold(img2gray, 10, 255, cv2.THRESH_BINARY)
-    result = cv2.bitwise_and(frame, frame, mask=mask)
+    mask = cv2.drawContours(mask, [max(contours, key=len)], -1, (255,255,255), -1)
 
-    cv2.imshow('mask', result)
-    cv2.imshow('edge', tight)
+    img2gray = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
+    _, mask = cv2.threshold(img2gray, 10, 255, cv2.THRESH_BINARY)
+    masked = cv2.bitwise_and(frame, frame, mask=mask)
+
+    cv2.imshow('mask', masked)
     cv2.imshow("live transmission", frame)
+
     key = cv2.waitKey(5)
     if key == ord('q'):
         break
